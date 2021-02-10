@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+// option go_package = "github.com/KumKeeHyun/grpc-example/heartbeat/yaho";
+
+package yaho;
+
+service HeartBeatService {
+    rpc Claim (ClaimArg) returns (ClaimReply);
+    rpc GetPeers (GetPeersArg) returns (GetPeersReply);
+}
+
+message ClaimArg {
+    int32 claimID = 1;
+    string claimAddr = 2;
+}
+
+message ClaimReply {
+    bool success = 1;
+}
+
+message GetPeersArg {
+}
+
+message GetPeersReply {
+    repeated Peer peers = 1;
+}
+
+message Peer {
+    int32 id = 1;
+    string addr = 2;
+}
