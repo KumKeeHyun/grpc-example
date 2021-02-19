@@ -19,7 +19,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type RaftServiceClient interface {
 	RequestVote(ctx context.Context, in *RequestVoteReq, opts ...grpc.CallOption) (*RequestVoteResp, error)
-	AppendEntries(ctx context.Context, in *AppendEntriesReq, opts ...grpc.CallOption) (*RequestVoteResp, error)
+	AppendEntries(ctx context.Context, in *AppendEntriesReq, opts ...grpc.CallOption) (*AppendEntriesResp, error)
 }
 
 type raftServiceClient struct {
@@ -39,8 +39,8 @@ func (c *raftServiceClient) RequestVote(ctx context.Context, in *RequestVoteReq,
 	return out, nil
 }
 
-func (c *raftServiceClient) AppendEntries(ctx context.Context, in *AppendEntriesReq, opts ...grpc.CallOption) (*RequestVoteResp, error) {
-	out := new(RequestVoteResp)
+func (c *raftServiceClient) AppendEntries(ctx context.Context, in *AppendEntriesReq, opts ...grpc.CallOption) (*AppendEntriesResp, error) {
+	out := new(AppendEntriesResp)
 	err := c.cc.Invoke(ctx, "/protobuf.RaftService/AppendEntries", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -53,7 +53,7 @@ func (c *raftServiceClient) AppendEntries(ctx context.Context, in *AppendEntries
 // for forward compatibility
 type RaftServiceServer interface {
 	RequestVote(context.Context, *RequestVoteReq) (*RequestVoteResp, error)
-	AppendEntries(context.Context, *AppendEntriesReq) (*RequestVoteResp, error)
+	AppendEntries(context.Context, *AppendEntriesReq) (*AppendEntriesResp, error)
 	mustEmbedUnimplementedRaftServiceServer()
 }
 
@@ -64,7 +64,7 @@ type UnimplementedRaftServiceServer struct {
 func (UnimplementedRaftServiceServer) RequestVote(context.Context, *RequestVoteReq) (*RequestVoteResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RequestVote not implemented")
 }
-func (UnimplementedRaftServiceServer) AppendEntries(context.Context, *AppendEntriesReq) (*RequestVoteResp, error) {
+func (UnimplementedRaftServiceServer) AppendEntries(context.Context, *AppendEntriesReq) (*AppendEntriesResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AppendEntries not implemented")
 }
 func (UnimplementedRaftServiceServer) mustEmbedUnimplementedRaftServiceServer() {}
