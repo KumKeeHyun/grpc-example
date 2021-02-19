@@ -1,0 +1,14 @@
+syntax = "proto3";
+package protobuf;
+
+message RequestVoteReq {
+    uint64 term = 1;
+    uint64 candidate = 2;
+    // uint64 lastLogIndex = 3;
+    // uint64 lastLogTerm = 4;
+}
+
+message RequestVoteResp {
+    uint64 term = 1;
+    bool voteGranted = 2;
+}

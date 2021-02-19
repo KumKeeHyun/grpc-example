@@ -1,0 +1,10 @@
+syntax = "proto3";
+package protobuf;
+
+import "requestVote.proto";
+import "mockAppendEntries.proto";
+
+service RaftService {
+    rpc RequestVote (RequestVoteReq) returns (RequestVoteResp);
+    rpc AppendEntries (AppendEntriesReq) returns (RequestVoteResp);
+}

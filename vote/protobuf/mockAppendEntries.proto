@@ -1,0 +1,12 @@
+syntax = "proto3";
+package protobuf;
+
+message AppendEntriesReq {
+    uint64 term = 1;
+    uint64 leader = 2;
+}
+
+message AppendEntriesResp {
+    uint64 term = 1;
+    bool success = 2;
+}
