@@ -47,7 +47,7 @@ func main() {
 		},
 		Peers: Peers,
 		Timeout: raft.Timeout{
-			ElectionTimeout: 1000 * time.Millisecond,
+			ElectionTimeout: 300 * time.Millisecond,
 			MinElectTimeout: 15 * time.Millisecond,
 		},
 	}

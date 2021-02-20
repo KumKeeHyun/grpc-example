@@ -35,7 +35,7 @@ func NewNode(cfg *Config) (*Node, error) {
 		peers[pInfo.ID] = peer
 	}
 
-	timeout := NewTimeout(cfg.Timeout.ElectionTimeout, cfg.Timeout.MinElectTimeout)
+	timeout := newTimeout(cfg.Timeout.ElectionTimeout, cfg.Timeout.MinElectTimeout)
 
 	return &Node{
 		ctx:       nil,
@@ -50,7 +50,7 @@ func NewNode(cfg *Config) (*Node, error) {
 func (n *Node) StartRaftNode() {
 	go func() {
 		<-time.After(5 * time.Second)
-		timeoutTicker := time.NewTicker(n.timeout.electionTimeout)
+		timeoutTicker := n.timeout.newTicker()
 
 		for {
 			select {
@@ -59,7 +59,7 @@ func (n *Node) StartRaftNode() {
 				n.startElection()
 			case req := <-n.timeout.resetReq:
 				timeoutTicker.Stop()
-				timeoutTicker = time.NewTicker(n.timeout.electionTimeout)
+				timeoutTicker = n.timeout.newTicker()
 				req <- struct{}{}
 			case req := <-n.timeout.stopReq:
 				timeoutTicker.Stop()
@@ -75,8 +75,8 @@ func (n *Node) startElection() {
 		votes       int64  = 1 // itselft
 	)
 
-	// n.ctxCancel() // cancel context if other context is running
-	ctx, ctxCancel := context.WithTimeout(context.Background(), 30*time.Millisecond)
+	n.ctxCancel() // cancel context if other context is running
+	ctx, ctxCancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
 	n.ctx, n.ctxCancel = ctx, ctxCancel
 
 	n.nodeState.Do(func(s *state) {
@@ -95,7 +95,7 @@ func (n *Node) startElection() {
 				Candidate: n.nodeInfo.ID,
 			}, grpc.WaitForReady(true))
 			if err != nil {
-				log.Printf("StartElection: RequestVote to %d fail\n", p.id)
+				log.Printf("StartElection: RequestVote to %d fail: %v\n", p.id, err)
 				return
 			}
 
@@ -126,7 +126,7 @@ func (n *Node) startElection() {
 func (n *Node) becomeFollower(leaderTerm uint64) {
 	n.timeout.stop()
 	defer n.timeout.reset()
-	// n.ctxCancel()
+	n.ctxCancel()
 
 	n.nodeState.Do(func(s *state) {
 		s.state = FOLLOWER
@@ -137,8 +137,8 @@ func (n *Node) becomeFollower(leaderTerm uint64) {
 
 func (n *Node) startLeader() {
 	n.timeout.stop()
-	// n.ctxCancel()
-	ctx, ctxCancel := context.WithTimeout(context.Background(), 30*time.Millisecond)
+	n.ctxCancel()
+	ctx, ctxCancel := context.WithCancel(context.Background())
 	n.ctx, n.ctxCancel = ctx, ctxCancel
 
 	n.nodeState.Do(func(s *state) {
@@ -151,9 +151,9 @@ func (n *Node) startLeader() {
 
 		for {
 			select {
-			// case <-ctx.Done():
-			// 	log.Println("StartLeader: Receive stop leader signal by cancel context")
-			// 	return
+			case <-ctx.Done():
+				log.Println("StartLeader: Receive stop leader signal by cancel context")
+				return
 			case <-heartbeatTicker.C:
 				isLeader := true
 				n.nodeState.Do(func(s *state) { isLeader = (s.state == LEADER) })
@@ -181,7 +181,7 @@ func (n *Node) sendHeartbeat(ctx context.Context) {
 				Leader: 0,
 			}, grpc.WaitForReady(true))
 			if err != nil {
-				log.Printf("SendHeartbeat: AppendEntries to %d fail\n", p.id)
+				log.Printf("SendHeartbeat: AppendEntries to %d fail: %v\n", p.id, err)
 				return
 			}
 
@@ -232,7 +232,7 @@ func (n *Node) AppendEntries(ctx context.Context, in *pb.AppendEntriesReq) (*pb.
 		Success: false,
 	}
 
-	log.Printf("AppendEntries: Receive AppendEntries Request in term\n", in.GetTerm())
+	log.Printf("AppendEntries: Receive AppendEntries Request in term %d\n", in.GetTerm())
 
 	n.nodeState.Do(func(s *state) {
 		resp.Term = s.term
