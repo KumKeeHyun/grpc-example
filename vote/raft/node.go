@@ -146,23 +146,31 @@ func (n *Node) startLeader() {
 	})
 
 	go func() {
-		heartbeatTicker := time.NewTicker(50 * time.Millisecond)
+		var (
+			heartbeatTicker = time.NewTicker(50 * time.Millisecond)
+			hbCtx           context.Context
+			hbCancel        context.CancelFunc
+		)
+
 		defer heartbeatTicker.Stop()
 
 		for {
 			select {
 			case <-ctx.Done():
 				log.Println("StartLeader: Receive stop leader signal by cancel context")
+				hbCancel()
 				return
 			case <-heartbeatTicker.C:
 				isLeader := true
 				n.nodeState.Do(func(s *state) { isLeader = (s.state == LEADER) })
 				if !isLeader {
 					log.Println("StartLeader: Stop leader. Node's state is not leader")
+					hbCancel()
 					return
 				}
 				log.Println("StartLeader: Send heartbeat")
-				n.sendHeartbeat(ctx)
+				hbCtx, hbCancel = context.WithTimeout(ctx, 50*time.Millisecond)
+				n.sendHeartbeat(hbCtx)
 			}
 		}
 	}()

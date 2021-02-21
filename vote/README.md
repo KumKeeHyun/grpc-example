@@ -6,17 +6,17 @@ Log는 제외하고 RequestVote 위주로 리더 선출 구현. AppendEntries �
 
 - id: 1
 ```
-$ go run main.go --id=1 --addr=loaclhost:10000
+$ go run main.go --id=1 --addr=localhost:10000
 ```
 
 - id: 2
 ```
-$ go run main.go --id=2 --addr=loaclhost:10001
+$ go run main.go --id=2 --addr=localhost:10001
 ```
 
 - id: 3
 ```
-$ go run main.go --id=3 --addr=loaclhost:10002
+$ go run main.go --id=3 --addr=localhost:10002
 ```
 
 ## Result
